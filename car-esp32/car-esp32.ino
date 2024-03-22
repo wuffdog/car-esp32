@@ -79,7 +79,6 @@ void ctrlRead() {
 
 // -----------------------------------------------------
 // Function: Stop everything
-// Ensure everything stopped
 void stopMode(){
     lSer.write(lStop);
     rSer.write(rStop);
@@ -178,7 +177,6 @@ void setup() {
 }
 
 void loop() {
-
 tgHead:
 
   // Read Xbox controller input
@@ -186,7 +184,7 @@ tgHead:
 
   // If Xbox controller is disconnected
   if(isCtrl == 0){
-    sendDisp("Bluetooth...", "Hold PAIR");
+    sendDisp("Bluetooth", "Hold PAIR");
     stopMode();
     goto tgHead;
   }
