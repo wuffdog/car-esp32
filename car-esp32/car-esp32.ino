@@ -186,6 +186,7 @@ tgHead:
   if(isCtrl == 0){
     sendDisp("Bluetooth", "Hold PAIR");
     stopMode();
+    isLocked = 1;
     goto tgHead;
   }
 
