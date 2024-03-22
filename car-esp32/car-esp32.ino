@@ -28,6 +28,7 @@ ESP32PWM buzz;
 #include <XboxSeriesXControllerESP32_asukiaaa.hpp>
 XboxSeriesXControllerESP32_asukiaaa::Core xboxController;
 
+int isCtrl = 0;
 int ctrlSpd = 0;
 int ctrlDir = 0;
 int ctrlA = 0;
@@ -65,12 +66,27 @@ int isLocked = 1;
 // Function: Read Xbox controller input
 void ctrlRead() {
   xboxController.onLoop();
-  ctrlSpd = (-1) * (xboxController.xboxNotif.joyLVert - 32767);
-  ctrlDir = xboxController.xboxNotif.joyRHori - 32767;
-  ctrlA = xboxController.xboxNotif.btnA;
-  ctrlY = xboxController.xboxNotif.btnY;
+  if(xboxController.isConnected()){
+    isCtrl = 1;
+    ctrlSpd = (-1) * (xboxController.xboxNotif.joyLVert - 32767);
+    ctrlDir = xboxController.xboxNotif.joyRHori - 32767;
+    ctrlA = xboxController.xboxNotif.btnA;
+    ctrlY = xboxController.xboxNotif.btnY;
+  }else{
+    isCtrl = 0;
+  }
 }
 
+// -----------------------------------------------------
+// Function: Stop everything
+// Ensure everything stopped
+void stopMode(){
+    lSer.write(lStop);
+    rSer.write(rStop);
+    sendBuzz(0);
+}
+
+// -----------------------------------------------------
 // Function: Send to display
 void sendDisp(String strLine1, String strLine2) {
   u8g2.clearBuffer();
@@ -82,6 +98,7 @@ void sendDisp(String strLine1, String strLine2) {
   u8g2.sendBuffer();
 }
 
+// -----------------------------------------------------
 // Function: Send to buzzer library
 void sendBuzz(int i) {
   switch (i) {
@@ -162,10 +179,17 @@ void setup() {
 
 void loop() {
 
-tgLocked:
+tgHead:
 
   // Read Xbox controller input
   ctrlRead();
+
+  // If Xbox controller is disconnected
+  if(isCtrl == 0){
+    sendDisp("Bluetooth...", "Hold PAIR");
+    stopMode();
+    goto tgHead;
+  }
 
   // Locked mode: Push Y on Xbox controller
   while (ctrlY) {
@@ -184,14 +208,9 @@ tgLocked:
   if (isLocked) {
     // Locked display message
     sendDisp("Locked", "Push Y");
-
-    // Ensure everything stopped
-    lSer.write(lStop);
-    rSer.write(rStop);
-    sendBuzz(0);
-
+    stopMode();
     // Locked loop
-    goto tgLocked;
+    goto tgHead;
   }
 
   // Xbox controller steady state tolerance
